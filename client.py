@@ -35,25 +35,31 @@ def getDataPoint(quote):
     stock = quote['stock']
     bid_price = float(quote['top_bid']['price'])
     ask_price = float(quote['top_ask']['price'])
-    price = bid_price
+    price = (bid_price + ask_price) / 2  # compute mid-price
     return stock, bid_price, ask_price, price
 
 
 def getRatio(price_a, price_b):
     """ Get ratio of price_a and price_b """
     """ ------------- Update this function ------------- """
-    return 1
+    return price_a / price_b
 
 
 # Main
 if __name__ == "__main__":
     # Query the price once every N seconds.
+    prices = {}  # dictionary to store latest mid-price for each stock
     for _ in iter(range(N)):
         quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
 
-        """ ----------- Update to get the ratio --------------- """
         for quote in quotes:
             stock, bid_price, ask_price, price = getDataPoint(quote)
             print("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
+            prices[stock] = price  # update latest mid-price for stock
 
-        print("Ratio %s" % getRatio(price, price))
+        # compute ratios for all pairs of stocks
+        for stock1 in prices:
+            for stock2 in prices:
+                if stock1 < stock2:
+                    ratio = getRatio(prices[stock1], prices[stock2])
+                    print("Ratio %s/%s: %.3f" % (stock1, stock2, ratio))
